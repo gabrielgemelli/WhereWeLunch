@@ -1,0 +1,42 @@
+﻿
+@{
+    ViewBag.Title = "Where are we going to have lunch? - Voting Results";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Voting Results - @DateTime.Today.ToString("dd/MM/yyyy")</h2>
+
+<div id="todayVotedForm">
+    <section class="content-wrapper main-content">
+        <table id="todayVotedRestaurants" class="table">
+            <thead>
+                <tr>
+                    <th>@Html.DisplayName("Restaurant")</th>
+
+                    <th>@Html.DisplayName("Votes")</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </section>
+</div>
+
+<script src="~/Scripts/jquery-3.1.1.min.js"></script>
+<script src="~/Scripts/viewScripts.js"></script>
+<script type="text/javascript">
+
+    $(document).ready(function () {
+
+        AjaxGetWebAPI("/voting/GetRestaurantsMostVoted?date=" + new Date().toLocaleDateString(), function (data) {
+            if (data.length > 0) {
+                $("#todayVotedRestaurants tbody tr").remove();
+
+                for (var i = 0; i < data.length; i++) {
+                    $("<tr><td>" + data[i].Restaurant.Name + "</td><td>" + data[i].VotesQuantity + "</td></tr>").appendTo("#todayVotedRestaurants tbody");
+                }
+            }
+        });
+    });
+
+</script>
+

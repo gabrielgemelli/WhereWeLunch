@@ -1,0 +1,19 @@
+﻿
+@{
+    ViewBag.Title = "Where are we going to have lunch? - " + @ViewBag.Title;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Logout</h2>
+
+<script src="~/Scripts/jquery-3.1.1.min.js"></script>
+<script src="~/Scripts/viewScripts.js"></script>
+<script type="text/javascript">
+
+    $(document).ready(function () {
+
+        AjaxPostWebAPI("/logout/logout", null, function () {
+            window.location.href = "Index";
+        });
+    });
+</script>

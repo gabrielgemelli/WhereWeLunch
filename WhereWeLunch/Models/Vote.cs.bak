@@ -1,0 +1,17 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+
+namespace WhereWeLunch.Models
+{
+    public class Vote
+    {
+        public Vote() { }
+
+        public int ID { get; set; }
+        public string HungryProfessionalUsername { get; set; }
+        public int SelectedRestaurantId { get; set; }
+        public DateTime VotedOn { get; set; }
+    }
+}

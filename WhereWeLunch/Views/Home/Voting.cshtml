@@ -1,0 +1,99 @@
+﻿
+@{
+    ViewBag.Title = "Where are we going to have lunch? - " + @ViewBag.Title;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Voting</h2>
+
+<label id="logout" class="hide">User not logged in</label>
+
+<div id="votingClosed" class="hide">
+
+    <label>Voting is closed</label>
+    <a href="VotingResults">Click here to see the result</a>
+
+</div>
+
+<div id="votingForm" class="hide">
+
+    <section class="content-wrapper main-content">
+        <table id="restaurants" class="table">
+            <thead>
+                <tr>
+                    <th>@Html.DisplayName("Name")</th>
+
+                    <th>@Html.DisplayName("Vote")</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </section>
+</div>
+
+<div id="votedForm" class="hide">
+    <label id="votedInformation">Restaurant Voted!</label>
+</div>
+
+<script src="~/Scripts/jquery-3.1.1.min.js"></script>
+<script src="~/Scripts/viewScripts.js"></script>
+<script type="text/javascript">
+
+    $(document).ready(function () {
+
+        UserIsLoaged(function (data) {
+            if (data == "") {
+                showLogin();
+
+                document.querySelector("#votingForm").classList.add("hide");
+                document.querySelector("#logout").classList.remove("hide");
+            }
+            else {
+                $("#user_email").val(data);
+
+                hideLogin();
+
+                document.querySelector("#logout").classList.add("hide");
+
+                AjaxGetWebAPI("/voting/GetRestaurantsToVoting", function (data) {
+                    if (data.length == 0) {
+                        document.querySelector("#votingClosed").classList.remove("hide");
+                    }
+                    else {
+                        document.querySelector("#votingClosed").classList.add("hide");
+                        document.querySelector("#votingForm").classList.remove("hide");
+
+                        $("#restaurants tbody tr").remove();
+
+                        for (var i = 0; i < data.length; i++) {
+                            $("<tr><td>" + data[i].Name + "</td><td><a href='#' onclick='voting(" + data[i].ID + ")'>Vote</a></td></tr>").appendTo("#restaurants tbody");
+                        }
+                    }
+                });
+            }
+        });
+    });
+
+    function voting(restaurantId) {
+        var professional = new Object();
+        professional.Email = $("#user_email").val();
+        var vote = new Object();
+        vote.HungryProfessional = professional;
+        vote.RestaurantID = restaurantId;
+
+        AjaxPostWebAPI("/voting", vote, function (data) {
+            if (data.ResponseCode == 200) {
+                document.querySelector("#votingForm").classList.add("hide");
+                document.querySelector("#votedForm").classList.remove("hide");
+                window.location.href = "VotingResults";
+            }
+            else {
+                alert(data.ResponseResult);
+            }
+        });
+    }
+
+</script>
+
+
+

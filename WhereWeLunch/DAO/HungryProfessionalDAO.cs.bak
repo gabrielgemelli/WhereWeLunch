@@ -1,0 +1,80 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using WhereWeLunch.Models;
+
+namespace WhereWeLunch.DAO
+{
+    public class HungryProfessionalDAO
+    {
+        public IList<HungryProfessional> Get()
+        {
+            using (var context = new EntitiesContext())
+            {
+                return context.HungryProfessionals.ToList();
+            }
+        }
+
+        public HungryProfessional Get(int id)
+        {
+            using (var context = new EntitiesContext())
+            {
+                return context.HungryProfessionals.FirstOrDefault(a => a.ID == id);
+            }
+        }
+
+        public HungryProfessional Get(string username, string password)
+        {
+            using (var context = new EntitiesContext())
+            {
+                return context.HungryProfessionals.FirstOrDefault(u => u.Username == username && u.Password == password);
+            }
+        }
+
+        public void Post(HungryProfessional hungryProfessional)
+        {
+            using (var context = new EntitiesContext())
+            {
+                context.HungryProfessionals.Add(hungryProfessional);
+                context.SaveChanges();
+            }
+        }
+
+        public void Update(HungryProfessional hungryProfessional)
+        {
+            using (var contexto = new EntitiesContext())
+            {
+                contexto.Entry(hungryProfessional).State = Microsoft.Data.Entity.EntityState.Modified;
+                contexto.SaveChanges();
+            }
+        }
+
+        public void Delete(int id)
+        {
+            var hungryProfessional = Get(id);
+
+            using (var context = new EntitiesContext())
+            {
+                context.HungryProfessionals.Remove(hungryProfessional);
+                context.SaveChanges();
+            }
+        }
+
+        public void InitializeData()
+        {
+            if (!Get().Any())
+            {
+                var hungryProfessionals = new List<HungryProfessional>();
+
+                hungryProfessionals.Add(new HungryProfessional("john.doe", "teste123"));
+                hungryProfessionals.Add(new HungryProfessional("jane.doe", "teste123"));
+                hungryProfessionals.Add(new HungryProfessional("joao.silva", "teste123"));
+                hungryProfessionals.Add(new HungryProfessional("maria.silva", "teste123"));
+                hungryProfessionals.Add(new HungryProfessional("paulo.silva", "teste123"));
+
+                hungryProfessionals.ForEach(usr => Post(usr));
+            }
+        }
+    }
+}

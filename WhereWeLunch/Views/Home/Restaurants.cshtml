@@ -1,0 +1,60 @@
+﻿
+@{
+    ViewBag.Title = "Where are we going to have lunch? - " + @ViewBag.Title;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Restaurants</h2>
+
+<label id="noDataFound" class="hide">Non-registered Restaurants</label>
+<label id="logout" class="hide">User not logged in</label>
+<div id="restaurantsForm" class="hide">
+    <section class="content-wrapper main-content">
+        <table id="restaurants" class="table">
+            <thead>
+                <tr>
+                    <th>@Html.DisplayName("Name")</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </section>
+</div>
+
+<script src="~/Scripts/jquery-3.1.1.min.js"></script>
+<script src="~/Scripts/viewScripts.js"></script>
+<script type="text/javascript">
+
+    $(document).ready(function () {
+
+        UserIsLoaged(function (data) {
+            if (data == "") {
+                showLogin();
+
+                document.querySelector("#restaurantsForm").classList.add("hide");
+                document.querySelector("#logout").classList.remove("hide");
+            }
+            else {
+                $("#user_email").val(data);
+
+                hideLogin();
+
+                document.querySelector("#logout").classList.add("hide");
+
+                AjaxGetWebAPI("/restaurant", function (data) {
+                    if (data.length == 0) {
+                        document.querySelector("#noDataFound").classList.remove("hide");
+                    }
+                    else {
+                        document.querySelector("#restaurantsForm").classList.remove("hide");
+
+                        for (var i = 0; i < data.length; i++) {
+                            $("<tr><td>" + data[i].Name + "</td><td></tr>").appendTo("#restaurants tbody");
+                        }
+                    }
+                });
+            }
+        });
+    });
+
+</script>

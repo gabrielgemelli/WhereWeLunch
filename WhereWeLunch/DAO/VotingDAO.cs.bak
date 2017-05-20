@@ -1,0 +1,36 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using WhereWeLunch.Models;
+
+namespace WhereWeLunch.DAO
+{
+    public class VotingDAO
+    {
+        public IList<Vote> Get(DateTime date)
+        {
+            using (var context = new EntitiesContext())
+            {
+                return context.Votes.Where(v => v.VotedOn.Date == date.Date).ToList();
+            }
+        }
+
+        public IList<Vote> Get(string hungryProfessionalUsername, DateTime date)
+        {
+            using (var context = new EntitiesContext())
+            {
+                return context.Votes.Where(v => v.VotedOn.Date == date.Date && v.HungryProfessionalUsername == hungryProfessionalUsername).ToList();
+            }
+        }
+
+        public void Post(Vote vote)
+        {
+            using (var context = new EntitiesContext())
+            {
+                context.Votes.Add(vote);
+                context.SaveChanges();
+            }
+        }
+    }
+}

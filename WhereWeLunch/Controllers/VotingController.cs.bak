@@ -1,0 +1,116 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Web.Http;
+using System.Web.Mvc;
+using WhereWeLunch.DAO;
+using WhereWeLunch.Models;
+using WhereWeLunch.Models.Response;
+
+namespace WhereWeLunch.Controllers
+{
+    public class VotingController : ApiController
+    {
+        #region private methods
+
+        private bool HungryProfessionalUsernameVotedToday(string hungryProfessionalUsername)
+        {
+            var dao = new VotingDAO();
+            return dao.Get(hungryProfessionalUsername, DateTime.Now).Any();
+        }
+
+        private bool IsBeforeNoon()
+        {
+            return DateTime.Now.Hour < 12;
+        }
+
+        private VoteTotal GetRestaurantMostVoted(DateTime date)
+        {
+            var mostVoted = this.GetRestaurantsMostVoted(date);
+
+            if (mostVoted != null && mostVoted.Any()) return mostVoted.FirstOrDefault();
+
+            return default(VoteTotal);
+        }
+
+        private IList<VoteTotal> GetRestaurantsMostVotedThisWeek()
+        {
+            var mostVotedThisWeek = new List<VoteTotal>();
+
+            var dayOfWeekToday = (int)DateTime.Today.DayOfWeek;
+
+            if (dayOfWeekToday > 0)
+            {
+                for (var dow = 1; dow <= dayOfWeekToday; dow++)
+                {
+                    var mostVoted = this.GetRestaurantMostVoted(DateTime.Today.AddDays(-dow));
+
+                    if (mostVoted != null) mostVotedThisWeek.Add(mostVoted);
+                }
+            }
+
+            return mostVotedThisWeek.OrderByDescending(a => a.Date).ToList();
+        }
+
+        #endregion
+
+        // POST api/<controller>
+        [System.Web.Http.HttpPost]
+        [ValidateAntiForgeryToken]
+        public VoteResponse Post([FromBody]Vote vote)
+        {
+            var dao = new VotingDAO();
+
+            if (String.IsNullOrWhiteSpace(vote.HungryProfessionalUsername))
+            {
+                return new VoteResponse { ResponseCode = HttpStatusCode.Forbidden, StatusIsSuccessful = false, ResponseResult = "Type your user name!" };
+            }
+
+            if (this.HungryProfessionalUsernameVotedToday(vote.HungryProfessionalUsername))
+            {
+                return new VoteResponse { ResponseCode = HttpStatusCode.Forbidden, StatusIsSuccessful = false, ResponseResult = "You already voted today!" };
+            }
+
+            if (!this.IsBeforeNoon())
+            {
+                return new VoteResponse { ResponseCode = HttpStatusCode.Forbidden, StatusIsSuccessful = false, ResponseResult = "Voting is avaliable until noon!" };
+            }
+
+            vote.VotedOn = DateTime.Now;
+
+            dao.Post(vote);
+
+            return new VoteResponse { ResponseCode = HttpStatusCode.OK, StatusIsSuccessful = true };
+        }
+
+        [System.Web.Http.HttpGet]
+        public IList<VoteTotal> GetRestaurantsMostVoted(DateTime date)
+        {
+            var dao = new VotingDAO();
+            var votes = dao.Get(date);
+            var votesGroupBy = votes.GroupBy(a => a.SelectedRestaurantId);
+            var votesSelect = votesGroupBy.Select(a => new VoteTotal { Date = date, Restaurant = new RestaurantDAO().Get(a.First().SelectedRestaurantId), VotesQuantity = a.Count() });
+
+            return votesSelect.OrderByDescending(a=>a.VotesQuantity).ToList();
+        }
+
+        [System.Web.Http.HttpGet]
+        public IList<Restaurant> GetRestaurantsToVoting()
+        {
+            var restaurants = new List<Restaurant>();
+
+            if (IsBeforeNoon())
+            {
+                restaurants = new RestaurantController().Get().ToList();
+
+                var mostVotedThisWeek = GetRestaurantsMostVotedThisWeek().ToList();
+
+                restaurants.RemoveAll(a => mostVotedThisWeek.Exists(b => b.Restaurant.ID == a.ID));
+            }
+
+            return restaurants;
+        }
+    }
+}

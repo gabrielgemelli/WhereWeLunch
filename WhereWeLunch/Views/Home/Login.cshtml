@@ -1,0 +1,66 @@
+﻿
+@{
+    ViewBag.Title = "Where are we going to have lunch? - " + @ViewBag.Title;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Login</h2>
+
+<div id="loginForm" class="hide">
+    <label for="email">E-mail:</label>
+    <input type="email" name="email" id="email" class="form-control" />
+
+    <label for="password">Password:</label>
+    <input type="password" name="password" id="password" class="form-control" />
+
+    <input type="button" value="Login" id="login" />
+</div>
+
+<label id="alreadyLogged" class="hide">You are already logged!</label>
+
+<script src="~/Scripts/jquery-3.1.1.min.js"></script>
+<script src="~/Scripts/viewScripts.js"></script>
+<script type="text/javascript">
+
+    $(document).ready(function () {
+
+        UserIsLoaged(function (data) {
+            if (data == "") {
+                showLogin();
+
+                document.querySelector("#loginForm").classList.remove("hide");
+                document.querySelector("#alreadyLogged").classList.add("hide");
+            }
+            else {
+                $("#user_email").val(data);
+                hideLogin();
+
+                document.querySelector("#loginForm").classList.add("hide");
+                document.querySelector("#alreadyLogged").classList.remove("hide");
+            }
+        });
+    });
+
+    $("#login").click(function () {
+        var professionalHungry = new Object();
+        professionalHungry.Email = $('#email').val();
+        professionalHungry.Password = $('#password').val();
+
+        AjaxPostWebAPI("/login/login", professionalHungry, function (data) {
+            if (data.ResponseCode == 200) {
+                $("#user_email").val(data.Data.Email)
+
+                hideLogin();
+
+                window.location.href = "Index";
+            }
+            else {
+                alert(data.ResponseResult);
+            }
+        });
+    }
+    );
+
+</script>
+
+
